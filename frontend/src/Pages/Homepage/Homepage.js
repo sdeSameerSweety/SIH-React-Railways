@@ -18,9 +18,11 @@ import {
 } from "@chakra-ui/react";
 import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css";
+import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 
 const Homepage = () => {
+  const djangoUrl = "http://127.0.0.1:8000/";
   const toast = useToast();
   const sourceDesk = useRef();
   const nonceVal = "grabway@123";
@@ -130,6 +132,10 @@ const Homepage = () => {
         tmp2 = {};
       }
       console.log(graphPlot);
+      const resData = await axios
+        .post(djangoUrl + "getRoute/", { graphPlot, trainNo, wagcap, wagno })
+        .then((res) => console.log(res))
+        .catch((err) => console.log(err));
     }
   }
 
