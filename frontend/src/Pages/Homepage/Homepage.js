@@ -18,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import "./Homepage.css"
 import { useToast } from "@chakra-ui/react";
+
 const Homepage = () => {
   const toast=useToast();
   const sourceDesk = useRef();
@@ -30,21 +31,65 @@ const Homepage = () => {
     nonce: nonceVal,
   });
 
-  const handleSearchDesk = async () => {
+  //for distance
+  async function distanceMatrix(originText, destinationText) {
+    try {
+      /* eslint-disable */
+      const service = new google.maps.DistanceMatrixService();
+      const request = {
+        origins: [originText],
+        destinations: [destinationText],
+        /* eslint-disable */
+        travelMode: google.maps.TravelMode.TRANSIT,
+        /* eslint-disable */
+        transitMode:google.maps.TransitMode.RAIL,
+        /* eslint-disable */
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false,
+      };
+      const responseDistanceMatrix = await service
+        .getDistanceMatrix(request)
+        .then((res) => {
+          setDistanceNum(res.rows[0].elements[0].distance.value);
+          setDistanceText(res.rows[0].elements[0].distance.text);
+          setDurationNum(res.rows[0].elements[0].duration.value);
+          setDurationText(res.rows[0].elements[0].duration.text);
+          //console.log(res);
+          packagePrice(res.rows[0].elements[0].distance.value);
+        });
+      setShowCards(true);
+    } catch (err) {
+      //console.log("Error while calculating distnace");
+      toast({
+        title: "Didn't find Any such Route",
+        description: "Presently we dont provide service in requested route",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setShowCards(false);
+    }
+  }
+
+  async function handleSearch(){
+    //console.log('clicked');
     if (
       sourceDesk.current.value.length === 0
     ) {
       toast({
-        title: "Source cannot be empty",
-        status: "error",
+        title: `warning toast`,
+        status: "warning",
         isClosable: true,
-        position: "top-right",
-      });
+        position:'bottom'
+      })
     }  
      else {
-      console.log('hello')
+      console.log('hello');
+
     }
-  };
+  }
+
 
   return( 
   <>
@@ -103,7 +148,7 @@ const Homepage = () => {
                 </Card>
       </div>
       <div className="button">
-          <button onClick={handleSearchDesk}
+          <button onClick={handleSearch}
             className="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
           >
             <span className="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
