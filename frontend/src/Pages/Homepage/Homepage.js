@@ -16,6 +16,7 @@ import {
   Button,
   Toast,
 } from "@chakra-ui/react";
+import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css"
 import { useToast } from "@chakra-ui/react";
 
@@ -168,7 +169,9 @@ const Homepage = () => {
     <div className="flex justify-center items-center w-[45%]">
       <img src="/assets/images/homepageImage.png"/>
     </div>
-  </div>:<div>Loading</div>}
+  </div>:<div className="flex justify-center items-center w-[100%]">
+      <Spinner/>
+    </div>}
   </>
   );
 };
