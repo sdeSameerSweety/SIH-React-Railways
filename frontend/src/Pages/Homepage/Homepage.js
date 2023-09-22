@@ -20,6 +20,7 @@ import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
+import { json } from "react-router-dom";
 
 const Homepage = () => {
   const djangoUrl = "http://127.0.0.1:8000/";
@@ -95,6 +96,7 @@ const Homepage = () => {
       //setShowCards(false);
     }
   }
+  const [routeData, setRouteData] = useState({});
   async function handleSearch() {
     //console.log('clicked');
     if (
@@ -134,10 +136,14 @@ const Homepage = () => {
       console.log(graphPlot);
       const resData = await axios
         .post(djangoUrl + "getRoute/", { graphPlot, trainNo, wagcap, wagno })
-        .then((res) => console.log(res))
+        .then((res) => {
+          // console.log(res);
+          setRouteData(JSON.parse(res.data));
+        })
         .catch((err) => console.log(err));
     }
   }
+  console.log(routeData);
 
   return (
     <>
