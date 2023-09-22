@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { Autocomplete } from "@react-google-maps/api";
 import {FaCircleDot} from "react-icons/fa6";
@@ -32,6 +32,10 @@ const Homepage = () => {
   });
 
   //for distance
+  //for demo a destination is provided:
+  const destinationText="Railway Station Bokaro Steel City, Jharkhand, Marafari, Bokaro Steel City, Bokaro, Jharkhand, India";
+  const [distanceNum,setDistanceNum]=useState(null);
+  const [distanceText,setDistanceText]=useState(null);
   async function distanceMatrix(originText, destinationText) {
     try {
       /* eslint-disable */
@@ -42,7 +46,7 @@ const Homepage = () => {
         /* eslint-disable */
         travelMode: google.maps.TravelMode.TRANSIT,
         /* eslint-disable */
-        transitMode:google.maps.TransitMode.RAIL,
+        
         /* eslint-disable */
         unitSystem: google.maps.UnitSystem.METRIC,
         avoidHighways: false,
@@ -53,14 +57,14 @@ const Homepage = () => {
         .then((res) => {
           setDistanceNum(res.rows[0].elements[0].distance.value);
           setDistanceText(res.rows[0].elements[0].distance.text);
-          setDurationNum(res.rows[0].elements[0].duration.value);
-          setDurationText(res.rows[0].elements[0].duration.text);
-          //console.log(res);
-          packagePrice(res.rows[0].elements[0].distance.value);
+          //setDurationNum(res.rows[0].elements[0].duration.value);
+          //setDurationText(res.rows[0].elements[0].duration.text);
+          console.log(res);
+          //packagePrice(res.rows[0].elements[0].distance.value);
         });
-      setShowCards(true);
+      //setShowCards(true);
     } catch (err) {
-      //console.log("Error while calculating distnace");
+      console.log(err);
       toast({
         title: "Didn't find Any such Route",
         description: "Presently we dont provide service in requested route",
@@ -68,7 +72,7 @@ const Homepage = () => {
         duration: 3000,
         isClosable: true,
       });
-      setShowCards(false);
+      //setShowCards(false);
     }
   }
 
@@ -85,8 +89,9 @@ const Homepage = () => {
       })
     }  
      else {
-      console.log('hello');
-
+      console.log(sourceDesk.current.value);
+      let OriginText=sourceDesk.current.value;
+      distanceMatrix(OriginText, destinationText);
     }
   }
 
