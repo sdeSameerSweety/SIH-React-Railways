@@ -17,7 +17,9 @@ import {
   Toast,
 } from "@chakra-ui/react";
 import "./Homepage.css"
+import { useToast } from "@chakra-ui/react";
 const Homepage = () => {
+  const toast=useToast();
   const sourceDesk = useRef();
   const nonceVal="grabway@123"
   const { isLoaded } = useJsApiLoader({
@@ -27,18 +29,35 @@ const Homepage = () => {
     mapIds: ["7e437361629e930a"],
     nonce: nonceVal,
   });
+
+  const handleSearchDesk = async () => {
+    if (
+      sourceDesk.current.value.length === 0
+    ) {
+      toast({
+        title: "Source cannot be empty",
+        status: "error",
+        isClosable: true,
+        position: "top-right",
+      });
+    }  
+     else {
+      console.log('hello')
+    }
+  };
+
   return( 
   <>
   {isLoaded?<div className="mt-[2%] flex justify-center items-center w-[100%] gap-10">
-    <div className="flex justify-center items-center w-[45%]">
-    <div>
+    <div className="flex flex-col justify-center items-center w-[45%] gap-10">
+      <div>
                 <Card
                   variant="filled"
                   sx={{ boxShadow: "0px 0px 0px 10px white" }}
                 >
                   <CardHeader>
                     <Heading size="lg">
-                      <div className="font-ubuntu">Enter Origin Station</div>
+                      <div className="font-ubuntu mb-[2%]">Enter Origin Station</div>
                     </Heading>
                   </CardHeader>
                   <CardBody>
@@ -66,6 +85,7 @@ const Homepage = () => {
                                 variant="filled"
                                 sx={{
                                   border: "2px solid grey",
+                                  borderRadius:'10px',
                                   padding: "20px",
                                   paddingLeft: "50px",
                                 }}
@@ -81,7 +101,19 @@ const Homepage = () => {
                     </Text>
                   </CardBody>
                 </Card>
-              </div>
+      </div>
+      <div className="button">
+          <button onClick={handleSearchDesk}
+            className="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
+          >
+            <span className="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span className="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span className="relative z-20 flex items-center text-sm gap-2">
+             
+              Search
+            </span>
+          </button>
+      </div>
     </div>
     <div className="flex justify-center items-center w-[45%]">
       <img src="/assets/images/homepageImage.png"/>
