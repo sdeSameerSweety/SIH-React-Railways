@@ -5,16 +5,24 @@ import {
   useJsApiLoader,
   DirectionsRenderer,
 } from "@react-google-maps/api";
+import {
+  setDefaults,
+  setLanguage,
+  setRegion,
+  fromAddress,
+  geocode,
+  fromLatLng,
+} from "react-geocode";
 import { Button, Mark, useControllableProp, useToast } from "@chakra-ui/react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
-const center = {
-  lat: -3.745,
-  lng: -38.523,
-};
-
 function MyComponent() {
+  setDefaults({
+    key: "AIzaSyDJaFr-HFXGBOg8pUSdQfGjGwGdIwtbXhY", // Your API key here.
+    language: "en", // Default language for responses.
+    region: "es", // Default region for responses.
+  });
   const [amount, setAmount] = useState(null);
   //   const [windowSize, setWindowSize] = useState(window.innerWidth);
   //   useEffect(() => {
@@ -43,6 +51,7 @@ function MyComponent() {
   }
   const routeData = location.state;
   console.log(routeData);
+
   const toast = useToast();
   ////console.log(location);
   const { isLoaded } = useJsApiLoader({
@@ -53,22 +62,16 @@ function MyComponent() {
     nonce: "grabway@123",
   });
 
-  const [directionResponse, setDirectionResponse] = useState("");
-  async function calculateRoute() {
-    /* eslint-disable */
-    const directionService = new google.maps.DirectionsService();
-    const results = await directionService.route({
-      origin: rideDataText.source,
-      destination: rideDataText.destination,
-      /* eslint-disable */
-      travelMode: google.maps.TravelMode.TRANSIT,
-    });
-    setDirectionResponse(results);
-  }
+  const [directionResponse, setDirectionResponse] = useState([]);
 
   const mapOptions = {
     mapId: "7e437361629e930a",
     disableDefaultUI: true,
+  };
+
+  const center = {
+    lat: 23.7925537,
+    lng: 86.4254662,
   };
   const [map, setMap] = React.useState(null);
 
@@ -84,20 +87,23 @@ function MyComponent() {
     setMap(null);
   }, []);
 
-  console.log(isLoaded);
+  console.log(directionResponse);
   return isLoaded ? (
     <>
       <div className="flex justify-center items-center ">
         <div>
           <GoogleMap
             mapContainerStyle={containerStyle}
-            zoom={14}
+            zoom={10}
             options={mapOptions}
             onLoad={onLoad}
             onUnmount={onUnmount}
           >
-            {/* <MarkerF position={fromVerifed ? finalPosition : initialPosition} />
-            {directionResponse && (
+            {location.state.markers.map((item) => {
+              return <MarkerF position={item} />;
+            })}
+
+            {/*{directionResponse && (
               <DirectionsRenderer directions={directionResponse} />
             )} */}
           </GoogleMap>
