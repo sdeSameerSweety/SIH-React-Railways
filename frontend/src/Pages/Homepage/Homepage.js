@@ -20,9 +20,10 @@ import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
-import { json } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
+  const navigate = useNavigate();
   const djangoUrl = "http://127.0.0.1:8000/";
   const toast = useToast();
   const sourceDesk = useRef();
@@ -139,6 +140,9 @@ const Homepage = () => {
         .then((res) => {
           // console.log(res);
           setRouteData(JSON.parse(res.data));
+          navigate("/routeDetails", {
+            state: { data: JSON.parse(res.data), stationPoints: stationPoints },
+          });
         })
         .catch((err) => console.log(err));
     }
