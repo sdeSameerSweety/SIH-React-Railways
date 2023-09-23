@@ -16,6 +16,14 @@ import {
   Button,
   Toast,
 } from "@chakra-ui/react";
+import {
+  setDefaults,
+  setLanguage,
+  setRegion,
+  fromAddress,
+  geocode,
+  fromLatLng,
+} from "react-geocode";
 import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css";
 import axios from "axios";
@@ -23,6 +31,11 @@ import { useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
+  setDefaults({
+    key: "AIzaSyDJaFr-HFXGBOg8pUSdQfGjGwGdIwtbXhY", // Your API key here.
+    language: "en", // Default language for responses.
+    region: "es", // Default region for responses.
+  });
   const navigate = useNavigate();
   const djangoUrl = "http://127.0.0.1:8000/";
   const toast = useToast();
@@ -140,9 +153,30 @@ const Homepage = () => {
         .then((res) => {
           // console.log(res);
           setRouteData(JSON.parse(res.data));
-          navigate("/routeDetails", {
-            state: { data: JSON.parse(res.data), stationPoints: stationPoints },
-          });
+          const markerL = [];
+          let ddr = JSON.parse(res.data);
+          console.log(ddr);
+          for (let k = 0; k < ddr.routePoints.length; k++) {
+            // console.log("Hello");
+            // console.log(stationPoints[ddr.routePoints[k]]);
+            let dd = stationPoints[ddr.routePoints[k]];
+            console.log(dd);
+            fromAddress(dd).then(({ results }) => {
+              const ddpo = results[0].geometry.location;
+              // console.log(ddpo);
+              markerL.push(results[0].geometry.location);
+              if (markerL.length === ddr.routePoints.length) {
+                navigate("/routeDetails", {
+                  state: {
+                    data: JSON.parse(res.data),
+                    stationPoints: stationPoints,
+                    start: OriginText,
+                    markers: markerL,
+                  },
+                });
+              }
+            });
+          }
         })
         .catch((err) => console.log(err));
     }
