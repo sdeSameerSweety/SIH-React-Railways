@@ -22,7 +22,7 @@ const LoginPage = () => {
     const [password,setPassword]=useState(null);
 
     async function handleLogin(){
-        const res=await axios.post('http://localhost:8080/login/railways/user', {
+        const res=await axios.post('https://sih-express-api.vercel.app/login/railways/user', {
             email:email,
             password:password,
         }).then((response)=>{
