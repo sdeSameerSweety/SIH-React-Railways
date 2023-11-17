@@ -31,7 +31,8 @@ import Spinner from "../../components/Spinner/Spinner";
 import "./Homepage.css";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const Homepage = () => {
   const [markerData, setmarkerData] = useState([]);
@@ -229,7 +230,9 @@ const Homepage = () => {
       },
     });
   }
-
+  if(!Cookies.get('userEmail')){
+    return <Navigate to={'/login'}/>
+}
   return (
     <>
       {isLoaded ? (
