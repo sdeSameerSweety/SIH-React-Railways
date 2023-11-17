@@ -62,7 +62,7 @@ function MyComponent() {
     nonce: "grabway@123",
   });
 
-  const [directionResponse, setDirectionResponse] = useState([]);
+  // const [directionResponse, setDirectionResponse] = useState([]);
 
   const mapOptions = {
     mapId: "7e437361629e930a",
@@ -74,6 +74,8 @@ function MyComponent() {
     lng: 86.4254662,
   };
   const [map, setMap] = React.useState(null);
+  let markerfill = [];
+  console.log(markerfill);
 
   const onLoad = React.useCallback(function callback(map) {
     // This is just an example of getting and using the map instance!!! don't just blindly copy!
@@ -87,11 +89,44 @@ function MyComponent() {
     setMap(null);
   }, []);
 
+  //Directions service
+  const [directionResponse, setDirectionResponse] = useState([]);
+  async function calculateRoute() {
+    if (!location.state.markers) {
+      return;
+    }
+    /* eslint-disable */
+    const directionService = new google.maps.DirectionsService();
+    let Directiontmparr = [];
+    for (var k = 0; k < location.state.markers.length - 1; k++) {
+      let results = await directionService.route({
+        origin: new google.maps.LatLng(
+          location.state.markers[k].latitude,
+          location.state.markers[k].longitude
+        ),
+        destination: new google.maps.LatLng(
+          location.state.markers[k + 1].latitude,
+          location.state.markers[k + 1].longitude
+        ),
+        /* eslint-disable */
+        travelMode: google.maps.TravelMode.TRANSIT,
+      });
+      Directiontmparr.push(results);
+      setDirectionResponse(Directiontmparr);
+    }
+    setDirectionResponse(Directiontmparr);
+  }
+
+  useEffect(() => {
+    calculateRoute();
+    console.log(directionResponse);
+  }, []);
+
   console.log(directionResponse);
   return isLoaded ? (
     <>
       <div className="flex justify-center items-center ">
-        <div>
+        <div className="mt-[4%]">
           <GoogleMap
             mapContainerStyle={containerStyle}
             zoom={10}
@@ -100,12 +135,17 @@ function MyComponent() {
             onUnmount={onUnmount}
           >
             {location.state.markers.map((item) => {
-              return <MarkerF position={item} />;
+              return (
+                <MarkerF
+                  position={{ lat: item.latitude, lng: item.longitude }}
+                />
+              );
             })}
 
-            {/*{directionResponse && (
-              <DirectionsRenderer directions={directionResponse} />
-            )} */}
+            {directionResponse &&
+              directionResponse.map((item) => {
+                return <DirectionsRenderer directions={item} />;
+              })}
           </GoogleMap>
         </div>
       </div>

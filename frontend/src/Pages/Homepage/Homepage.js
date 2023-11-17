@@ -2,6 +2,8 @@ import React, { useRef, useState } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { Autocomplete } from "@react-google-maps/api";
 import { FaCircleDot } from "react-icons/fa6";
+import graphPlot from ".././../distanceGraph/all_dist.json";
+import stationPoints from "../../distanceGraph/finalIndexing.json";
 import {
   Input,
   InputGroup,
@@ -21,6 +23,7 @@ import {
   setLanguage,
   setRegion,
   fromAddress,
+  RequestType,
   geocode,
   fromLatLng,
 } from "react-geocode";
@@ -31,6 +34,10 @@ import { useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
+  const [markerData, setmarkerData] = useState([]);
+  const [sendData, setsendData] = useState("");
+  const [navigateOrnot, setNavigateorNot] = useState(false);
+  const [loaderState, setLoaderState] = useState(false);
   setDefaults({
     key: "AIzaSyDJaFr-HFXGBOg8pUSdQfGjGwGdIwtbXhY", // Your API key here.
     language: "en", // Default language for responses.
@@ -49,21 +56,55 @@ const Homepage = () => {
     nonce: nonceVal,
   });
 
+  async function getNearby(locationName, tmparr, llpp, databack, Origin) {
+    const addressResponse = await geocode(RequestType.ADDRESS, locationName, {
+      language: "en",
+      region: "in",
+    });
+
+    // console.log(addressResponse.results[0].geometry.location)
+    const apiKey = "AIzaSyDJaFr-HFXGBOg8pUSdQfGjGwGdIwtbXhY"; // Replace with your actual API key
+    await fetch("https://places.googleapis.com/v1/places:searchNearby", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "places.location",
+      },
+      body: JSON.stringify({
+        includedTypes: ["train_station"],
+        maxResultCount: 1,
+        rankPreference: "DISTANCE",
+        locationRestriction: {
+          circle: {
+            center: {
+              latitude: addressResponse.results[0].geometry.location.lat,
+              longitude: addressResponse.results[0].geometry.location.lng,
+            },
+            radius: 1000.0,
+          },
+        },
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // console.log(data);
+        tmparr.push(data.places[0].location);
+        console.log(tmparr);
+        setmarkerData(tmparr);
+        if (tmparr.length === llpp.length) {
+          setNavigateorNot(true);
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+
   const [trainNo, setTrainNo] = useState();
   const [wagcap, setWagcap] = useState();
   const [wagno, setWagNo] = useState();
   //Station Data
-  const stationPoints = {
-    2: "Dhanbad Junction, Pandey Muhalla, Dhanbad, Jharkhand 826001, India",
-    3: "Kusunda Junction, Dhanbad, Jharkhand, India",
-    4: "Bhuli Railway Station, Wassepur, Dhanbad, Jharkhand, India",
-    5: "Bansjora Station, Bansjora, Jharkhand, India",
-    6: "Baseria, Kusunda, Basaria, Jharkhand",
-    7: "Tetulmari, Nagri Kalan, Jharkhand, India",
-  };
 
   //Graph
-  let graphPlot = {};
   //for distance
   //for demo a destination is provided:
   const destinationText =
@@ -110,9 +151,18 @@ const Homepage = () => {
       //setShowCards(false);
     }
   }
+
+  async function goAhead(llpp, data, Origin) {
+    console.log(llpp);
+    let tmparr = [];
+    for (const pp in llpp) {
+      getNearby(stationPoints[pp], tmparr, llpp, data, Origin);
+    }
+  }
   const [routeData, setRouteData] = useState({});
   async function handleSearch() {
     //console.log('clicked');
+    setNavigateorNot(false);
     if (
       sourceDesk.current.value.length === 0 ||
       trainNo.length === 0 ||
@@ -126,6 +176,7 @@ const Homepage = () => {
         position: "bottom",
       });
     } else {
+      setLoaderState(true);
       console.log(sourceDesk.current.value);
       let OriginText = sourceDesk.current.value;
       let tmp = {};
@@ -133,20 +184,8 @@ const Homepage = () => {
         if (stationPoints[k] !== OriginText)
           await distanceMatrix(OriginText, stationPoints[k], tmp, k);
       }
-      graphPlot[1] = tmp;
-      for (const k in stationPoints) {
-        let tmp2 = {};
-        await distanceMatrix(stationPoints[k], OriginText, tmp2, 1);
-        let ctr = 0;
-        for (const z in stationPoints) {
-          if (k !== z) {
-            await distanceMatrix(stationPoints[k], stationPoints[z], tmp2, z);
-          }
-        }
-        console.log(tmp2);
-        graphPlot[k] = tmp2;
-        tmp2 = {};
-      }
+      graphPlot[0] = tmp;
+      stationPoints[0] = OriginText;
       console.log(graphPlot);
       const resData = await axios
         .post(djangoUrl + "getRoute/", { graphPlot, trainNo, wagcap, wagno })
@@ -157,6 +196,7 @@ const Homepage = () => {
           let ddr = JSON.parse(res.data);
           console.log(ddr);
           for (let k = 0; k < ddr.routePoints.length; k++) {
+            setsendData(res.data);
             // console.log("Hello");
             // console.log(stationPoints[ddr.routePoints[k]]);
             let dd = stationPoints[ddr.routePoints[k]];
@@ -166,14 +206,8 @@ const Homepage = () => {
               // console.log(ddpo);
               markerL.push(results[0].geometry.location);
               if (markerL.length === ddr.routePoints.length) {
-                navigate("/routeDetails", {
-                  state: {
-                    data: JSON.parse(res.data),
-                    stationPoints: stationPoints,
-                    start: OriginText,
-                    markers: markerL,
-                  },
-                });
+                setLoaderState(false);
+                goAhead(ddr.routePoints, res.data, OriginText);
               }
             });
           }
@@ -182,181 +216,213 @@ const Homepage = () => {
     }
   }
   console.log(routeData);
+  console.log(navigateOrnot);
+  console.log(markerData);
+
+  if (navigateOrnot) {
+    navigate("/routeDetails", {
+      state: {
+        data: JSON.parse(sendData),
+        stationPoints: stationPoints,
+        start: sourceDesk.current.value,
+        markers: markerData,
+      },
+    });
+  }
 
   return (
     <>
       {isLoaded ? (
-        <div className="mt-[2%] flex justify-center items-center w-[100%] gap-10">
-          <div className="flex flex-col justify-center items-center w-[45%] gap-10">
-            <div>
-              <Card
-                variant="filled"
-                sx={{ boxShadow: "0px 0px 0px 10px white" }}
-              >
-                <CardBody>
-                  <CardHeader>
-                    <Heading size="md">
-                      <div className="font-ubuntu">Enter Origin Station</div>
-                    </Heading>
-                  </CardHeader>
-                  <Text>
-                    <div className="flex flex-row">
-                      <div className="source flex justify-center items-center">
-                        <InputGroup
-                          sx={{
-                            borderRadius: "30px",
-                          }}
-                        >
-                          <InputLeftElement pointerEvents="none">
-                            <FaCircleDot fill="green" />
-                          </InputLeftElement>
-                          <Autocomplete className=" font-ubuntu text-center">
-                            <Input
-                              className="card"
-                              variant="filled"
+        <>
+          {!loaderState && (
+            <div className="mt-[2%] flex justify-center items-center w-[100%] gap-10">
+              <div className="flex flex-col justify-center items-center w-[45%] gap-10">
+                <div>
+                  <Card
+                    variant="filled"
+                    sx={{ boxShadow: "0px 0px 0px 10px white" }}
+                  >
+                    <CardBody>
+                      <CardHeader>
+                        <Heading size="md">
+                          <div className="font-ubuntu">
+                            Enter Origin Station
+                          </div>
+                        </Heading>
+                      </CardHeader>
+                      <Text>
+                        <div className="flex flex-row">
+                          <div className="source flex justify-center items-center">
+                            <InputGroup
                               sx={{
-                                border: "2px solid grey",
-                                borderRadius: "10px",
-                                padding: "20px",
-                                paddingLeft: "50px",
+                                borderRadius: "30px",
                               }}
-                              type="text"
-                              w={400}
-                              placeholder="From where ?"
-                              ref={sourceDesk}
-                            />
-                          </Autocomplete>
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </Text>
-                  <CardHeader>
-                    <Heading size="md">
-                      <div className="font-ubuntu">Enter Rake Unique ID</div>
-                    </Heading>
-                  </CardHeader>
-                  <Text>
-                    <div className="flex flex-row">
-                      <div className="source flex justify-center items-center">
-                        <InputGroup
-                          sx={{
-                            borderRadius: "30px",
-                          }}
-                        >
-                          <InputLeftElement pointerEvents="none">
-                            <FaCircleDot fill="red" />
-                          </InputLeftElement>
+                            >
+                              <InputLeftElement pointerEvents="none">
+                                <FaCircleDot fill="green" />
+                              </InputLeftElement>
+                              <Autocomplete className=" font-ubuntu text-center">
+                                <Input
+                                  className="card"
+                                  variant="filled"
+                                  sx={{
+                                    border: "2px solid grey",
+                                    borderRadius: "10px",
+                                    padding: "20px",
+                                    paddingLeft: "50px",
+                                  }}
+                                  type="text"
+                                  w={400}
+                                  placeholder="From where ?"
+                                  ref={sourceDesk}
+                                />
+                              </Autocomplete>
+                            </InputGroup>
+                          </div>
+                        </div>
+                      </Text>
+                      <CardHeader>
+                        <Heading size="md">
+                          <div className="font-ubuntu">
+                            Enter Rake Unique ID
+                          </div>
+                        </Heading>
+                      </CardHeader>
+                      <Text>
+                        <div className="flex flex-row">
+                          <div className="source flex justify-center items-center">
+                            <InputGroup
+                              sx={{
+                                borderRadius: "30px",
+                              }}
+                            >
+                              <InputLeftElement pointerEvents="none">
+                                <FaCircleDot fill="red" />
+                              </InputLeftElement>
 
-                          <Input
-                            className="card font-ubuntu"
-                            variant="filled"
-                            sx={{
-                              border: "2px solid grey",
-                              borderRadius: "10px",
-                              padding: "20px",
-                              paddingLeft: "50px",
-                            }}
-                            type="text"
-                            w={400}
-                            placeholder="Can I know The Id ?"
-                            onChange={(e) => setTrainNo(e.target.value)}
-                          />
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </Text>
-                  <CardHeader>
-                    <Heading size="md">
-                      <div className="font-ubuntu">Enter Number of Wagons</div>
-                    </Heading>
-                  </CardHeader>
-                  <Text>
-                    <div className="flex flex-row">
-                      <div className="source flex justify-center items-center">
-                        <InputGroup
-                          sx={{
-                            borderRadius: "30px",
-                          }}
-                        >
-                          <InputLeftElement pointerEvents="none">
-                            <FaCircleDot fill="black" />
-                          </InputLeftElement>
+                              <Input
+                                className="card font-ubuntu"
+                                variant="filled"
+                                sx={{
+                                  border: "2px solid grey",
+                                  borderRadius: "10px",
+                                  padding: "20px",
+                                  paddingLeft: "50px",
+                                }}
+                                type="text"
+                                w={400}
+                                placeholder="Can I know The Id ?"
+                                onChange={(e) => setTrainNo(e.target.value)}
+                              />
+                            </InputGroup>
+                          </div>
+                        </div>
+                      </Text>
+                      <CardHeader>
+                        <Heading size="md">
+                          <div className="font-ubuntu">
+                            Enter Number of Wagons
+                          </div>
+                        </Heading>
+                      </CardHeader>
+                      <Text>
+                        <div className="flex flex-row">
+                          <div className="source flex justify-center items-center">
+                            <InputGroup
+                              sx={{
+                                borderRadius: "30px",
+                              }}
+                            >
+                              <InputLeftElement pointerEvents="none">
+                                <FaCircleDot fill="black" />
+                              </InputLeftElement>
 
-                          <Input
-                            className="card font-ubuntu"
-                            variant="filled"
-                            sx={{
-                              border: "2px solid grey",
-                              borderRadius: "10px",
-                              padding: "20px",
-                              paddingLeft: "50px",
-                            }}
-                            type="text"
-                            w={400}
-                            placeholder="Tell me number of wagons ?"
-                            onChange={(e) => setWagNo(e.target.value)}
-                          />
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </Text>
-                  <CardHeader>
-                    <Heading size="md">
-                      <div className="font-ubuntu">
-                        Enter Capacity/Wagon (in Tonnes)
-                      </div>
-                    </Heading>
-                  </CardHeader>
-                  <Text>
-                    <div className="flex flex-row">
-                      <div className="source flex justify-center items-center">
-                        <InputGroup
-                          sx={{
-                            borderRadius: "30px",
-                          }}
-                        >
-                          <InputLeftElement pointerEvents="none">
-                            <FaCircleDot fill="black" />
-                          </InputLeftElement>
+                              <Input
+                                className="card font-ubuntu"
+                                variant="filled"
+                                sx={{
+                                  border: "2px solid grey",
+                                  borderRadius: "10px",
+                                  padding: "20px",
+                                  paddingLeft: "50px",
+                                }}
+                                type="text"
+                                w={400}
+                                placeholder="Tell me number of wagons ?"
+                                onChange={(e) => setWagNo(e.target.value)}
+                              />
+                            </InputGroup>
+                          </div>
+                        </div>
+                      </Text>
+                      <CardHeader>
+                        <Heading size="md">
+                          <div className="font-ubuntu">
+                            Enter Capacity/Wagon (in Tonnes)
+                          </div>
+                        </Heading>
+                      </CardHeader>
+                      <Text>
+                        <div className="flex flex-row">
+                          <div className="source flex justify-center items-center">
+                            <InputGroup
+                              sx={{
+                                borderRadius: "30px",
+                              }}
+                            >
+                              <InputLeftElement pointerEvents="none">
+                                <FaCircleDot fill="black" />
+                              </InputLeftElement>
 
-                          <Input
-                            className="card font-ubuntu"
-                            variant="filled"
-                            sx={{
-                              border: "2px solid grey",
-                              borderRadius: "10px",
-                              padding: "20px",
-                              paddingLeft: "50px",
-                            }}
-                            type="text"
-                            w={400}
-                            placeholder="Capcity per Wagon ?"
-                            onChange={(e) => setWagcap(e.target.value)}
-                          />
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </Text>
-                </CardBody>
-              </Card>
+                              <Input
+                                className="card font-ubuntu"
+                                variant="filled"
+                                sx={{
+                                  border: "2px solid grey",
+                                  borderRadius: "10px",
+                                  padding: "20px",
+                                  paddingLeft: "50px",
+                                }}
+                                type="text"
+                                w={400}
+                                placeholder="Capcity per Wagon ?"
+                                onChange={(e) => setWagcap(e.target.value)}
+                              />
+                            </InputGroup>
+                          </div>
+                        </div>
+                      </Text>
+                    </CardBody>
+                  </Card>
+                </div>
+                <div className="button">
+                  <button
+                    onClick={handleSearch}
+                    className="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
+                  >
+                    <span className="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                    <span className="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                    <span className="relative z-20 flex items-center text-sm gap-2">
+                      Search
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-center items-center w-[45%]">
+                <img src="/assets/images/homepageImage.png" />
+              </div>
             </div>
-            <div className="button">
-              <button
-                onClick={handleSearch}
-                className="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
-              >
-                <span className="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-                <span className="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-                <span className="relative z-20 flex items-center text-sm gap-2">
-                  Search
-                </span>
-              </button>
+          )}
+          {loaderState && (
+            <div className="flex justify-center item-center w-[100vw] h-[80vh]">
+              <img
+                src="/assets/images/loader.gif"
+                className="rounded-lg mt-[2%]"
+                alt="loading..."
+              />
             </div>
-          </div>
-          <div className="flex justify-center items-center w-[45%]">
-            <img src="/assets/images/homepageImage.png" />
-          </div>
-        </div>
+          )}
+        </>
       ) : (
         <div className="flex justify-center items-center w-[100%]">
           <Spinner />
