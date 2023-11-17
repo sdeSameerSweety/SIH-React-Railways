@@ -16,6 +16,7 @@ import {
 import { Button, Mark, useControllableProp, useToast } from "@chakra-ui/react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 function MyComponent() {
   setDefaults({
@@ -79,6 +80,7 @@ function MyComponent() {
 
   const onLoad = React.useCallback(function callback(map) {
     // This is just an example of getting and using the map instance!!! don't just blindly copy!
+    /* eslint-disable */
     const bounds = new window.google.maps.LatLngBounds(center);
     map.fitBounds(bounds);
 
@@ -100,10 +102,12 @@ function MyComponent() {
     let Directiontmparr = [];
     for (var k = 0; k < location.state.markers.length - 1; k++) {
       let results = await directionService.route({
+        /* eslint-disable */
         origin: new google.maps.LatLng(
           location.state.markers[k].latitude,
           location.state.markers[k].longitude
         ),
+        /* eslint-disable */
         destination: new google.maps.LatLng(
           location.state.markers[k + 1].latitude,
           location.state.markers[k + 1].longitude
