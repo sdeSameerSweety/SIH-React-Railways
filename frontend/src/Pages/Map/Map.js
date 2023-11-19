@@ -1,5 +1,7 @@
 import React from "react";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import Cookies from "js-cookie";
+import { Navigate } from "react-router-dom";
 
 const containerStyle = {
   // width: `${windowSize <= 600 ? "500px" : "1000px"}`,
@@ -40,7 +42,9 @@ function MyComponent() {
   const onUnmount = React.useCallback(function callback(map) {
     setMap(null);
   }, []);
-
+  if(!Cookies.get('userEmail')){
+    return <Navigate to={'/login'}/>
+  }
   return isLoaded ? (
     <div className="flex justify-center items-center ">
       <GoogleMap
