@@ -105,22 +105,22 @@ const Homepage = () => {
   const [wagcap, setWagcap] = useState();
   const [wagno, setWagNo] = useState();
   function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = deg2rad(lat2-lat1);  // deg2rad below
-    var dLon = deg2rad(lon2-lon1); 
-    var a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-      ; 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    var d = R * c; // Distance in km
-    return d;
-  }
-  
-  function deg2rad(deg) {
-    return deg * (Math.PI/180)
-  }
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1); 
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
   //Station Data
 
   //Graph
@@ -210,8 +210,8 @@ const Homepage = () => {
             language: "en",
             region: "in",
           });
-          // console.log("Origin",addro.results[0].geometry.location);
-          // console.log("Destination",addrd.results[0].geometry.location);
+          console.log("Origin",addro.results[0].geometry.location);
+          console.log("Destination",addrd.results[0].geometry.location);
           const dist = haversine(addro.results[0].geometry.location,addrd.results[0].geometry.location);
           console.log(dist);
           tmp[k] = dist;

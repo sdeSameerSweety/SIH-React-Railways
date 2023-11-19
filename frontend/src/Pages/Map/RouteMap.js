@@ -118,11 +118,11 @@ function MyComponent() {
     }
     /* eslint-disable */
     const directionService = new google.maps.DirectionsService();
+    let ppoo = [];
     for (var i = 0; i < location.state.markers.length - 1; i++) {
       if (directionService) {
-        let results = [];
-        results.push(
-          await directionService.route({
+        await directionService
+          .route({
             origin: new google.maps.LatLng(
               location.state.markers[i].latitude,
               location.state.markers[i].longitude
@@ -135,16 +135,17 @@ function MyComponent() {
             /* eslint-disable */
             travelMode: google.maps.TravelMode.TRANSIT,
           })
-        );
-
-        ress.push(results);
-
-        setDirectionResponse(ress);
+          .then((res) => {
+            console.log(res);
+            ppoo.push(res);
+          })
+          .catch((err) => console.log(err));
       }
     }
-    setDirectionResponse(ress);
+    console.log(ppoo);
+    setDirectionResponse(ppoo);
   }
-  console.log("diex", ress);
+  console.log("diex", directionResponse);
   if (directionResponse) {
     for (var oo = 0; oo < directionResponse.length; oo++) {
       damn.push(ppio);
@@ -156,19 +157,20 @@ function MyComponent() {
     calculateRoute();
   }, []);
   const [num, setnum] = useState(0);
-  const getnextid = () => {
-    setnum(num + 1);
-    // return num;
-  };
+  // const getnextid = () => {
+  //   setnum(num + 1);
+  //   // return num;
+  // };
 
-  const getprevid = () => {
-    setnum(num - 1);
-    // return num;
-  };
+  // const getprevid = () => {
+  //   setnum(num - 1);
+  //   // return num;
+  // };
   // const llo = [1,2,3];
   // console.log("ow",onway())
-  console.log("damn", damn);
-  console.log("direction", directionResponse);
+  // console.log("damn", damn);
+  // console.log(num)
+  // console.log("direction", directionResponse);
   return isLoaded ? (
     <>
       {directionResponse && (
@@ -200,7 +202,7 @@ function MyComponent() {
                 })}
 
                 {directionResponse && (
-                  <DirectionsRenderer directions={directionResponse[num][0]} />
+                  <DirectionsRenderer directions={directionResponse[num]} />
                 )}
               </GoogleMap>
               {/* </>
@@ -214,33 +216,53 @@ function MyComponent() {
           </div>
 
           <div className="flex justify-center items-center w-[100vw] gap-10">
-          <div className="button" onClick={() => { getnextid(); }}>
-          <div
-            
-            class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
-          >
-            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="relative z-20 flex items-center text-sm gap-2">
-             <AiFillLock/>
-              Previous
-            </span>
-          </div>
-        </div>
+            <div
+              className="button"
+              onClick={() => {
+                if (num > 0) setnum(num - 1);
+                else {
+                  toast({
+                    title: "Previous route not available",
+                    status: "warning",
+                    isClosable: true,
+                    position: "bottom",
+                  });
+                }
+              }}
+            >
+              <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
+                <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                <span class="relative z-20 flex items-center text-sm gap-2">
+                  <AiFillLock />
+                  Previous
+                </span>
+              </div>
+            </div>
 
-        <div className="button" onClick={() => { getnextid(); }}>
-          <div
-            
-            class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
-          >
-            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="relative z-20 flex items-center text-sm gap-2">
-             <AiFillLock/>
-              Next
-            </span>
-          </div>
-        </div>
+            <div
+              className="button"
+              onClick={() => {
+                if (num + 1 < directionResponse.length) setnum(num + 1);
+                else {
+                  toast({
+                    title: "Next route not available",
+                    status: "warning",
+                    isClosable: true,
+                    position: "bottom",
+                  });
+                }
+              }}
+            >
+              <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
+                <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+                <span class="relative z-20 flex items-center text-sm gap-2">
+                  <AiFillLock />
+                  Next
+                </span>
+              </div>
+            </div>
           </div>
         </>
       )}
