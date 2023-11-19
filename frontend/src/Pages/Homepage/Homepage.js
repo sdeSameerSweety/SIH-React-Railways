@@ -223,7 +223,7 @@ function deg2rad(deg) {
       const resData = await axios
         .post(djangoUrl + "getRoute/", { graphPlot, trainNo, wagcap, wagno })
         .then((res) => {
-          // console.log(res);
+          console.log("hey",JSON.parse(res.data));
           setRouteData(JSON.parse(res.data));
           const markerL = [];
           let ddr = JSON.parse(res.data);
