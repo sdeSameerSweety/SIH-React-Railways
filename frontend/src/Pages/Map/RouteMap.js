@@ -90,37 +90,48 @@ function MyComponent() {
   }, []);
 
   //Directions service
-  const [directionResponse, setDirectionResponse] = useState([]);
+  const [directionResponse, setDirectionResponse] = useState("");
+  const onway = ()=>{
+    let t = [];
+    for(var j=1;j<location.state.markers.length-1;j++)
+    {
+      let mm = {
+        location:{lat:location.state.markers[j].latitude,lng:location.state.markers[j].longitude},
+        stopover:true,
+      }
+      t.push(mm);
+    }
+    return t;
+  }
+
   async function calculateRoute() {
     if (!location.state.markers) {
       return;
     }
     /* eslint-disable */
     const directionService = new google.maps.DirectionsService();
-    let Directiontmparr = [];
-    for (var k = 0; k < location.state.markers.length - 1; k++) {
       let results = await directionService.route({
         origin: new google.maps.LatLng(
-          location.state.markers[k].latitude,
-          location.state.markers[k].longitude
+          location.state.markers[0].latitude,
+          location.state.markers[0].longitude
         ),
         destination: new google.maps.LatLng(
-          location.state.markers[k + 1].latitude,
-          location.state.markers[k + 1].longitude
+          location.state.markers[location.state.markers.length-1].latitude,
+          location.state.markers[location.state.markers.length-1].longitude
         ),
+        waypoints:onway(),
         /* eslint-disable */
         travelMode: google.maps.TravelMode.TRANSIT,
       });
-      Directiontmparr.push(results);
-      setDirectionResponse(Directiontmparr);
+      setDirectionResponse(results);
     }
-    setDirectionResponse(Directiontmparr);
-  }
 
   useEffect(() => {
+
     calculateRoute();
     console.log(directionResponse);
   }, []);
+  // console.log("ow",onway())
 
   console.log(directionResponse);
   return isLoaded ? (
@@ -142,10 +153,7 @@ function MyComponent() {
               );
             })}
 
-            {directionResponse &&
-              directionResponse.map((item) => {
-                return <DirectionsRenderer directions={item} />;
-              })}
+            {directionResponse && <DirectionsRenderer directions={directionResponse} />}
           </GoogleMap>
         </div>
       </div>
