@@ -5,6 +5,8 @@ import {
   useJsApiLoader,
   DirectionsRenderer,
 } from "@react-google-maps/api";
+import { haversine } from "haversine-distance";
+import { AiFillLock } from "react-icons/ai";
 import {
   setDefaults,
   setLanguage,
@@ -16,7 +18,6 @@ import {
 import { Button, Mark, useControllableProp, useToast } from "@chakra-ui/react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
 
 function MyComponent() {
   setDefaults({
@@ -80,7 +81,6 @@ function MyComponent() {
 
   const onLoad = React.useCallback(function callback(map) {
     // This is just an example of getting and using the map instance!!! don't just blindly copy!
-    /* eslint-disable */
     const bounds = new window.google.maps.LatLngBounds(center);
     map.fitBounds(bounds);
 
@@ -92,19 +92,25 @@ function MyComponent() {
   }, []);
 
   //Directions service
-  const [directionResponse, setDirectionResponse] = useState("");
-  const onway = ()=>{
+  const [directionResponse, setDirectionResponse] = useState(false);
+  const onway = () => {
     let t = [];
-    for(var j=1;j<location.state.markers.length-1;j++)
-    {
+    for (var j = 1; j < location.state.markers.length - 1; j++) {
       let mm = {
-        location:{lat:location.state.markers[j].latitude,lng:location.state.markers[j].longitude},
-        stopover:true,
-      }
+        location: {
+          lat: location.state.markers[j].latitude,
+          lng: location.state.markers[j].longitude,
+        },
+        stopover: true,
+      };
       t.push(mm);
     }
     return t;
-  }
+  };
+
+  const ress = [];
+  const damn = [];
+  let ppio = 0;
 
   async function calculateRoute() {
     if (!location.state.markers) {
@@ -112,55 +118,132 @@ function MyComponent() {
     }
     /* eslint-disable */
     const directionService = new google.maps.DirectionsService();
-      let results = await directionService.route({
-        /* eslint-disable */
-        origin: new google.maps.LatLng(
-          location.state.markers[0].latitude,
-          location.state.markers[0].longitude
-        ),
-        /* eslint-disable */
-        destination: new google.maps.LatLng(
-          location.state.markers[location.state.markers.length-1].latitude,
-          location.state.markers[location.state.markers.length-1].longitude
-        ),
-        waypoints:onway(),
-        /* eslint-disable */
-        travelMode: google.maps.TravelMode.TRANSIT,
-      });
-      setDirectionResponse(results);
+    for (var i = 0; i < location.state.markers.length - 1; i++) {
+      if (directionService) {
+        let results = [];
+        results.push(
+          await directionService.route({
+            origin: new google.maps.LatLng(
+              location.state.markers[i].latitude,
+              location.state.markers[i].longitude
+            ),
+            destination: new google.maps.LatLng(
+              location.state.markers[i + 1].latitude,
+              location.state.markers[i + 1].longitude
+            ),
+            // waypoints:onway(),
+            /* eslint-disable */
+            travelMode: google.maps.TravelMode.TRANSIT,
+          })
+        );
+
+        ress.push(results);
+
+        setDirectionResponse(ress);
+      }
     }
-
+    setDirectionResponse(ress);
+  }
+  console.log("diex", ress);
+  if (directionResponse) {
+    for (var oo = 0; oo < directionResponse.length; oo++) {
+      damn.push(ppio);
+      ppio = ppio + 1;
+    }
+  }
+  console.log(damn);
   useEffect(() => {
-
     calculateRoute();
-    console.log(directionResponse);
   }, []);
-  // console.log("ow",onway())
+  const [num, setnum] = useState(0);
+  const getnextid = () => {
+    setnum(num + 1);
+    // return num;
+  };
 
-  console.log(directionResponse);
+  const getprevid = () => {
+    setnum(num - 1);
+    // return num;
+  };
+  // const llo = [1,2,3];
+  // console.log("ow",onway())
+  console.log("damn", damn);
+  console.log("direction", directionResponse);
   return isLoaded ? (
     <>
-      <div className="flex justify-center items-center ">
-        <div className="mt-[4%]">
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            zoom={10}
-            options={mapOptions}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
-          >
-            {location.state.markers.map((item) => {
-              return (
-                <MarkerF
-                  position={{ lat: item.latitude, lng: item.longitude }}
-                />
-              );
-            })}
+      {directionResponse && (
+        <>
+          <div className="flex justify-center items-center ">
+            <div className="mt-[4%]">
+              {/* {damn.length != 0 ? (
+                <>
+                  {damn.map((item22) => {
+                    console.log(directionResponse);
+                    return (
+                      <> */}
+              <GoogleMap
+                mapContainerStyle={containerStyle}
+                zoom={10}
+                options={mapOptions}
+                onLoad={onLoad}
+                onUnmount={onUnmount}
+              >
+                {location.state.markers.map((item) => {
+                  return (
+                    <MarkerF
+                      position={{
+                        lat: item.latitude,
+                        lng: item.longitude,
+                      }}
+                    />
+                  );
+                })}
 
-            {directionResponse && <DirectionsRenderer directions={directionResponse} />}
-          </GoogleMap>
+                {directionResponse && (
+                  <DirectionsRenderer directions={directionResponse[num][0]} />
+                )}
+              </GoogleMap>
+              {/* </>
+                    );
+                  })}
+                </>
+              ) : (
+                <></>
+              )} */}
+            </div>
+          </div>
+
+          <div className="flex justify-center items-center w-[100vw] gap-10">
+          <div className="button" onClick={() => { getnextid(); }}>
+          <div
+            
+            class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
+          >
+            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span class="relative z-20 flex items-center text-sm gap-2">
+             <AiFillLock/>
+              Previous
+            </span>
+          </div>
         </div>
-      </div>
+
+        <div className="button" onClick={() => { getnextid(); }}>
+          <div
+            
+            class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none"
+          >
+            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+            <span class="relative z-20 flex items-center text-sm gap-2">
+             <AiFillLock/>
+              Next
+            </span>
+          </div>
+        </div>
+          </div>
+        </>
+      )}
     </>
   ) : (
     <></>
