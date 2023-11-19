@@ -33,6 +33,7 @@ import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import haversine from 'haversine-distance'
 
 const Homepage = () => {
   const [markerData, setmarkerData] = useState([]);
@@ -103,6 +104,23 @@ const Homepage = () => {
   const [trainNo, setTrainNo] = useState();
   const [wagcap, setWagcap] = useState();
   const [wagno, setWagNo] = useState();
+  function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1); 
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
   //Station Data
 
   //Graph
@@ -181,9 +199,23 @@ const Homepage = () => {
       console.log(sourceDesk.current.value);
       let OriginText = sourceDesk.current.value;
       let tmp = {};
+      const addro = await geocode(RequestType.ADDRESS, OriginText, {
+        language: "en",
+        region: "in",
+      });
+      let oo = 1;
       for (const k in stationPoints) {
-        if (stationPoints[k] !== OriginText)
-          await distanceMatrix(OriginText, stationPoints[k], tmp, k);
+        if (stationPoints[k] !== OriginText) {
+          const addrd = await geocode(RequestType.ADDRESS, stationPoints[k], {
+            language: "en",
+            region: "in",
+          });
+          console.log("Origin",addro.results[0].geometry.location);
+          console.log("Destination",addrd.results[0].geometry.location);
+          const dist = haversine(addro.results[0].geometry.location,addrd.results[0].geometry.location);
+          console.log(dist);
+          tmp[k] = dist;
+        }
       }
       graphPlot[0] = tmp;
       stationPoints[0] = OriginText;
@@ -230,9 +262,9 @@ const Homepage = () => {
       },
     });
   }
-  if(!Cookies.get('userEmail')){
-    return <Navigate to={'/login'}/>
-}
+  if (!Cookies.get("userEmail")) {
+    return <Navigate to={"/login"} />;
+  }
   return (
     <>
       {isLoaded ? (
