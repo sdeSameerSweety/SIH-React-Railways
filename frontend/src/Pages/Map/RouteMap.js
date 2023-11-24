@@ -7,6 +7,7 @@ import {
 } from "@react-google-maps/api";
 import { haversine } from "haversine-distance";
 import { AiFillLock } from "react-icons/ai";
+import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import {
   setDefaults,
   setLanguage,
@@ -15,9 +16,17 @@ import {
   geocode,
   fromLatLng,
 } from "react-geocode";
-import { Button, Mark, useControllableProp, useToast } from "@chakra-ui/react";
+import {
+  Button,
+  Mark,
+  Stat,
+  useControllableProp,
+  useToast,
+} from "@chakra-ui/react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Station from "../../distanceGraph/finalIndexing.json";
+import "./map.css";
 
 function MyComponent() {
   setDefaults({
@@ -26,6 +35,7 @@ function MyComponent() {
     region: "es", // Default region for responses.
   });
   const [amount, setAmount] = useState(null);
+  const [dis, setdis] = useState("flex");
   //   const [windowSize, setWindowSize] = useState(window.innerWidth);
   //   useEffect(() => {
   //     const handleWindowResize = () => {
@@ -53,7 +63,9 @@ function MyComponent() {
   }
   const routeData = location.state;
   console.log(routeData);
-
+  const [begin, setbegin] = useState(
+    Station[location.state.data.routePoints[0]]
+  );
   const toast = useToast();
   ////console.log(location);
   const { isLoaded } = useJsApiLoader({
@@ -101,7 +113,7 @@ function MyComponent() {
   const [currIndex, setcurrindex] = useState(0);
 
   useEffect(() => {
-    let l1 = location.state.markers[currIndex+1];
+    let l1 = location.state.markers[currIndex + 1];
     let l2 = location.state.markers[currIndex];
     calculateRoute(l1, l2);
   }, []);
@@ -133,32 +145,36 @@ function MyComponent() {
 
   console.log(currIndex);
   useEffect(() => {
-    let l4 = location.state.markers[currIndex+1];
+    let l4 = location.state.markers[currIndex + 1];
     let l5 = location.state.markers[currIndex];
     calculateRoute(l4, l5);
   }, [currIndex]);
 
   console.log(location.state);
   return isLoaded ? (
-    <>
+    <div className="flex">
       {/* {directionResponse && (
         <> */}
-      <div className="flex justify-center items-center ">
-        <div className="mt-[4%]">
-          {/* {damn.length != 0 ? (
+      <div style={{ marginLeft: "20px" }}>
+        <div
+          className="flex justify-center items-center "
+          style={{ marginTop: "20px" }}
+        >
+          <div className="mt-[10%]">
+            {/* {damn.length != 0 ? (
                 <>
                   {damn.map((item22) => {
                     console.log(directionResponse);
                     return (
                       <> */}
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            zoom={10}
-            options={mapOptions}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
-          >
-            {/* {location.state.markers.map((item) => {
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              zoom={10}
+              options={mapOptions}
+              onLoad={onLoad}
+              onUnmount={onUnmount}
+            >
+              {/* {location.state.markers.map((item) => {
               return (
                 <MarkerF
                   position={{
@@ -168,74 +184,186 @@ function MyComponent() {
                 />
               );
             })} */}
-            <MarkerF position={{lat:location.state.markers[currIndex].latitude,lng:location.state.markers[currIndex].longitude}}/>
-            <MarkerF position={{lat:location.state.markers[currIndex+1].latitude,lng:location.state.markers[currIndex+1].longitude}}/>
+              <MarkerF
+                position={{
+                  lat: location.state.markers[currIndex].latitude,
+                  lng: location.state.markers[currIndex].longitude,
+                }}
+              />
+              <MarkerF
+                position={{
+                  lat: location.state.markers[currIndex + 1].latitude,
+                  lng: location.state.markers[currIndex + 1].longitude,
+                }}
+              />
 
-            {directionResponse && (
-              <DirectionsRenderer directions={directionResponse} />
-            )}
-          </GoogleMap>
-          {/* </>
+              {directionResponse && (
+                <DirectionsRenderer directions={directionResponse} />
+              )}
+            </GoogleMap>
+            {/* </>
                     );
                   })}
                 </>
               ) : (
                 <></>
               )} */}
-        </div>
-      </div>
-
-      <div className="flex justify-center items-center w-[100vw] gap-10">
-        <div
-          className="button"
-          onClick={() => {
-            if (currIndex > 0) setcurrindex(currIndex - 1);
-            else {
-              toast({
-                title: "Previous route not available",
-                status: "warning",
-                isClosable: true,
-                position: "bottom",
-              });
-            }
-          }}
-        >
-          <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
-            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="relative z-20 flex items-center text-sm gap-2">
-              <AiFillLock />
-              Previous
-            </span>
           </div>
         </div>
 
         <div
-          className="button"
-          onClick={() => {
-            if (currIndex + 1 < location.state.markers.length - 1) {
-              setcurrindex(currIndex + 1);
-            } else {
-              toast({
-                title: "Next route not available",
-                status: "warning",
-                isClosable: true,
-                position: "bottom",
-              });
-            }
-          }}
+          className="flex justify-center items-center w-[100vw] gap-10"
+          style={{ marginTop: "20px" }}
         >
-          <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
-            <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
-            <span class="relative z-20 flex items-center text-sm gap-2">
-              <AiFillLock />
-              Next
-            </span>
+          <div
+            className="button"
+            onClick={() => {
+              if (currIndex > 0) setcurrindex(currIndex - 1);
+              else {
+                toast({
+                  title: "Previous route not available",
+                  status: "warning",
+                  isClosable: true,
+                  position: "bottom",
+                });
+              }
+            }}
+          >
+            <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
+              <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+              <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+              <span class="relative z-20 flex items-center text-sm gap-2">
+                <FaArrowLeft />
+                Previous
+              </span>
+            </div>
+          </div>
+
+          <div
+            className="button"
+            onClick={() => {
+              if (currIndex + 1 < location.state.markers.length - 1) {
+                setcurrindex(currIndex + 1);
+              } else {
+                toast({
+                  title: "Next route not available",
+                  status: "warning",
+                  isClosable: true,
+                  position: "bottom",
+                });
+              }
+            }}
+          >
+            <div class="box-border relative z-30 inline-flex items-center justify-center w-auto px-8 py-3 overflow-hidden font-bold text-white transition-all duration-300 bg-indigo-600 rounded-md cursor-pointer group ring-offset-2 ring-1 ring-indigo-300 ring-offset-indigo-200 hover:ring-offset-indigo-500 ease focus:outline-none">
+              <span class="absolute bottom-0 right-0 w-8 h-20 -mb-8 -mr-5 transition-all duration-300 ease-out transform rotate-45 translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+              <span class="absolute top-0 left-0 w-20 h-8 -mt-1 -ml-12 transition-all duration-300 ease-out transform -rotate-45 -translate-x-1 bg-white opacity-10 group-hover:translate-x-0"></span>
+              <span class="relative z-20 flex items-center text-sm gap-2">
+                <FaArrowRight />
+                Next
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </>
+      <div className="grid">
+        <div
+          className="flex"
+          style={{
+            marginLeft: "100px",
+            marginTop: "50px",
+            borderTop: "10px solid black",
+          }}
+        >
+          <div style={{ paddingRight: "50px" }}>
+            <span
+              style={{
+                fontFamily: "serif",
+                fontSize: "x-large",
+                fontWeight: "bold",
+                color: "blue",
+                paddingTop: "10px",
+              }}
+            >
+              Station ID
+            </span>
+            {location.state.data.routePoints.map((item, index) => {
+              return (
+                <>
+                  <div
+                    style={{
+                      fontSize: "large",
+                      // color: "red",
+                      fontWeight: "700",
+                      paddingTop: "20px",
+                      textAlign: "center",
+                      border: "2px solid white",
+                      cursor: "pointer",
+                      // background: "black",
+                      borderRadius: "12px",
+                      paddingBottom: "2px",
+                    }}
+                    className="textid"
+                    onClick={() =>
+                      setbegin(Station[location.state.data.routePoints[index]])
+                    }
+                  >
+                    {item}
+                  </div>
+                </>
+              );
+            })}
+          </div>
+          <div>
+            <span
+              style={{
+                display: `${dis}`,
+                fontFamily: "serif",
+                fontSize: "x-large",
+                fontWeight: "bold",
+                color: "blue",
+              }}
+            >
+              Weights Taken
+            </span>
+            {location.state.data.routePoints.map((item, index) => {
+              return (
+                <>
+                  <div
+                    style={{
+                      fontSize: "large",
+                      color: "black",
+                      fontWeight: "700",
+                      paddingTop: "20px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {location.state.data.weightsEach[index]}
+                  </div>
+                </>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex justify-center" style={{ paddingTop: "20%" }}>
+          <div
+            style={{
+              marginLeft: "50px",
+              padding: "6px",
+              color: "white",
+              fontSize: "large",
+              fontWeight: "700",
+              borderLeft: "5px solid red",
+              borderBottom: "5px solid grey",
+              borderRadius: "10px",
+              background: "black",
+              marginRight: "10px",
+            }}
+          >
+            {begin}
+          </div>
+        </div>
+      </div>
+    </div>
   ) : (
     //     )}
     <></>

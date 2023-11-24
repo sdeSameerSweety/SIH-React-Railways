@@ -1,0 +1,9 @@
+.textid{
+    background: black;
+    color: red;
+}
+.textid:hover{
+    background: rgba(233, 85, 173, 0.932);
+    color:black;
+    border:2px solid black;
+}
