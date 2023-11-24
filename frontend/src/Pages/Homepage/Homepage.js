@@ -94,7 +94,7 @@ const Homepage = () => {
         tmparr.push(data.places[0].location);
         console.log(tmparr);
         setmarkerData(tmparr);
-        if (tmparr.length === llpp.length) {
+        if (tmparr.length === llpp.length+1) {
           setNavigateorNot(true);
         }
       })
@@ -172,10 +172,12 @@ function deg2rad(deg) {
   }
 
   async function goAhead(llpp, data, Origin) {
-    console.log(llpp);
+    // consolddde.log("I am ",llpp);
     let tmparr = [];
+    getNearby(Origin,tmparr,llpp,data,Origin);
     for (const pp in llpp) {
-      getNearby(stationPoints[pp], tmparr, llpp, data, Origin);
+      // console.log("consoleme",stationPoints[llpp[pp]]);
+      getNearby(stationPoints[llpp[pp]], tmparr, llpp, data, Origin);
     }
   }
   const [routeData, setRouteData] = useState({});
@@ -206,15 +208,15 @@ function deg2rad(deg) {
       let oo = 1;
       for (const k in stationPoints) {
         if (stationPoints[k] !== OriginText) {
-          const addrd = await geocode(RequestType.ADDRESS, stationPoints[k], {
-            language: "en",
-            region: "in",
-          });
-          console.log("Origin",addro.results[0].geometry.location);
-          console.log("Destination",addrd.results[0].geometry.location);
-          const dist = haversine(addro.results[0].geometry.location,addrd.results[0].geometry.location);
-          console.log(dist);
-          tmp[k] = dist;
+          // const addrd = await geocode(RequestType.ADDRESS, stationPoints[k], {
+          //   language: "en",
+          //   region: "in",
+          // });
+          // console.log("Origin",addro.results[0].geometry.location);
+          // console.log("Destination",addrd.results[0].geometry.location);
+          // const dist = haversine(addro.results[0].geometry.location,addrd.results[0].geometry.location);
+          // console.log(dist);
+          tmp[k] = 15700+k;
         }
       }
       graphPlot[0] = tmp;
@@ -240,6 +242,7 @@ function deg2rad(deg) {
               markerL.push(results[0].geometry.location);
               if (markerL.length === ddr.routePoints.length) {
                 setLoaderState(false);
+                // console.log("Route am u",ddr.routePoints)
                 goAhead(ddr.routePoints, res.data, OriginText);
               }
             });
@@ -253,6 +256,7 @@ function deg2rad(deg) {
   console.log(markerData);
 
   if (navigateOrnot) {
+    // console.log("marker",markerData)
     navigate("/routeDetails", {
       state: {
         data: JSON.parse(sendData),
